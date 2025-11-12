@@ -689,23 +689,11 @@ class ConjugateDisplay:
                         active_imperfect = result.get("المضارع المعلوم", {}).get("هو", "—")
                         active_perfect = result.get("الماضي المعلوم", {}).get("هو", verb_form)
                         
-                        # For nouns, use classnoun
-                        from . import classnoun
-                        from . import ar_verb
-                        from . import verb_const
-                        future_type_code = ar_verb.get_future_type_by_name(future_type)
-                        noun_obj = classnoun.NounClass(verb_form, False, future_type_code)
-                        
-                        # Get active and passive participles
-                        try:
-                            active_participle = noun_obj.conjugate_noun(verb_const.SubjectNoun)
-                            passive_participle = noun_obj.conjugate_noun(verb_const.ObjectNoun)
-                        except:
-                            active_participle = "—"
-                            passive_participle = "—"
-                        
-                        # Placeholders for now
+                        # Noun derivatives (masdar, participles, etc.) are not in the DICT result
+                        # TODO: Implement proper noun extraction
                         noun_place_time = "—"
+                        passive_participle = "—"
+                        active_participle = "—"
                         masdar = "—"
                     else:
                         # Fallback if structure is different
