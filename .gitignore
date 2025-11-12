@@ -59,3 +59,4 @@ htmlcov/
 venv/
 env/
 .env
+arabic_verb_forms_*.csv
