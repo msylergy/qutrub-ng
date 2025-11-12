@@ -1,191 +1,180 @@
+# Qutrub-ng: Modern Arabic Verb Conjugation
 
-Qutrub
-=======
-  Qutrub: Arabic verb conjugation software  قطرب: تصريف الأفعال العربية
+## قطرب: تصريف الأفعال العربية
 
-[![downloads]( https://img.shields.io/sourceforge/dt/qutrub.svg)](http://sourceforge.org/projects/qutrub)
-[![downloads]( https://img.shields.io/sourceforge/dm/qutrub.svg)](http://sourceforge.org/projects/qutrub)
+A modern, development-focused fork of the Qutrub Arabic verb conjugation software, optimized for Jupyter notebook development and research.
 
-  Developers: 	Taha Zerrouki: http://tahadz.com
-	taha dot zerrouki at gmail dot com
+**🔬 Development Focus**: This repository prioritizes notebook-based exploration, testing, and development of Arabic verb conjugation algorithms.
 
+**📚 Original Project**: Based on the work of Taha Zerrouki ([tahadz.com](http://tahadz.com))
 
-Features |   value
----------|---------------------------------------------------------------------------------
-Authors  | [Authors.md](https://github.com/linuxscout/qutrub/master/AUTHORS.md)
-Release  | 1.5 (app), 1.2.4 (library)
-License  |[GPL](https://github.com/linuxscout/qutrub/master/COPYING)
-Tracker  |[linuxscout/qutrub/Issues](https://github.com/linuxscout/qutrub/issues)
-Mailinglist  |[<qutrub@googlegroups.com>](http://groups.google.com/group/qutrub/)
-Website  |[qutrub.arabeyes.org](http://qutrub.arabeyes.org)
-Source  |[Github](http://github.com/linuxscout/qutrub)
-Download  |[sourceforge](http://qutrub.sourceforge.net)
-Feedbacks  |[Comments](http://tahadz.com/qutrub/contact)
-Accounts  | [@Twitter](https://twitter.com/linuxscout)  [@Sourceforge](http://sourceforge.net/projectsqutrub/)
+---
 
+## Quick Start with Jupyter
 
-## Install
+### 1. Install Dependencies
 
---------
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Launch Jupyter
+
+```bash
+jupyter notebook qutrub_notebook.ipynb
+```
+
+### 3. Start Conjugating
+
+```python
+import libqutrub.conjugator
+
+# Basic conjugation
+verb = "كَتَبَ"
+table = libqutrub.conjugator.conjugate(verb, "فتحة", transitive=True)
+print(table)
+```
+
+---
+
+## Features
+
+- 🎯 **Comprehensive Conjugation**: Support for all Arabic verb forms (Regular, Irregular, Defective)
+- 📖 **Notebook-Ready**: Optimized for interactive development and research
+- 🌐 **Multiple Formats**: HTML, CSV, XML, TeX, and more
+- 🔍 **Validation**: Built-in verb validation and suggestions
+- 🧪 **Extensible**: Easy to extend with new conjugation rules
+- 📊 **API Ready**: RESTful API integration
+
+---
+
+## Development Setup
+
 ### Requirements
+- Python 3.7+
+- pyarabic>=0.6.2
 
-pyarabic>=0.6.2
+### Installation
 
-### Installation on Apache
+```bash
+# Clone the repository
+git clone https://github.com/msylergy/qutrub-ng.git
+cd qutrub-ng
 
-enable mod_python in Apache
-extract the qutrub package and run it from the web.
-The program doesn't need a database.
+# Install dependencies
+pip install -r requirements.txt
 
-### Installation as library 
-
-```shell
-pip install libqutrub
-```
-### Installation as an application
-
-check that python is of version 2.5, it support python3 or higher is installed
-extract the package
-run the conjugate.py script 
-
-``` Usage 
-
-(C) CopyLeft 2009, Taha Zerrouki
-Usage: conjugate -f filename [OPTIONS]
-	[-h | --help]		outputs this usage message
-	[-V | --version]	program version
-	[-f | --file= filename]	input file to conjugate
-	[-d | --display=  format]	display format as html,csv, tex, xml"
-	[-a | --all ]		Conjugate in all tenses
-	[-i | --imperative]	Conjugate in imperative
-	[-F | --future]		conjugate in the present and the future
-	[-p | --past]		conjugate in the past
-	[-c | --confirmed]	conjugate in confirmed ( future or imperative) "
-	[-m | --moode]		conjugate in future Subjunctive( mansoub) or Jussive (majzoom) "
-	[-v | --passive]	passive form
-	N.B. FILE FORMAT is descripted in README
-	This program is licensed under the GPL License
+# Start developing with the notebook
+jupyter notebook qutrub_notebook.ipynb
 ```
 
-#### Input file format   
+---
 
--File encoding must be "utf8"
-The input file  format is a text comma separeted  csv
-Fields are separated by tabulation.
-A line can be ignored, if it begin by '#'
-The first field is the verb in vocalised form
-The second field is the mark of the letter before last in the future tense, it used just for the verb Thulathi (with three letters).
+## Library Usage
 
-```
-	values 
-		Fahta:
-			1- fatha
-			2-فتحة
-			3-ف
-			4-f
-		DAMMA:
-			1- damma
-			2-ضمة
-			3-ض
-			4-d
-		kasra:
-			1- kasra
-			2-كسرة
-			3-ك
-			4-k
-	or values used as Conjugation mode ( Bab Tasrif باب التصريف)
-		Bab		past	future
-		1		FATHA	DAMMA
-		2		FATHA	KASRA
-		3		FATHA	FATHA
-		4		KASRA	FATHA
-		5		DAMMA	DAMMA
-		6		KASRA	KASRA
-```
-The third field is :Transitive/intransitive
-	values can be used in this field are:
-```
-		transitive :
-				1-متعدي
-				2-م
-				3-مشترك
-				4-ك
-				5-t
-				6-transitive
-		intransitive:
-				1-لازم
-				2-ل
-				3-i
-				4-intransitive
-```
-Example 
-#### commented line
-```
-كَتَبَ	ضمة	متعدي
-ضَرَبَ	كسرة	متعدي
-ذَكَرَ	ضمة	متعدي
-سَكَتَ	ضمة	لازم
-سَكَنَ	ضمة	متعدي
-عَلَّمَ		متعدي
-صَارَعَ	-	متعدي
-أَكْرَمَ	-	متعدي
-تَفَقَّدَ	-	متعدي
-تَنَازَعَ	-	متعدي
-اِدَّارَكَ	-	متعدي
+### Basic Conjugation
 
-```
-This program is licensed under the GPL License
-
-### Call from python
-* Simple call
 ```python
 import libqutrub.conjugator
 
-verb=u"سعد"
-future_type =u"كسرة"
-table = libqutrub.conjugator.conjugate(verb,future_type, transitive= True);
+verb = "سعد"
+future_type = "كسرة"
+table = libqutrub.conjugator.conjugate(verb, future_type, transitive=True)
 print(table)
-
 ```
-* display format
-display format can be : 
-        - 'Text':
-        - 'HTML':
-        - 'HTMLColoredDiacritics':
-        - 'DICT':
-        - 'CSV':
-        - 'GUI':
-        - 'TABLE':
-        - 'XML':
-        - 'TeX':
-        - 'ROWS':
+
+### Advanced Options
+
 ```python
 import libqutrub.conjugator
 
-verb=u"سعد"
-future_type =u"كسرة"
-table = libqutrub.conjugator.conjugate(verb,future_type, transitive= True, display_format="DICT");
-print(table)
+verb = "كَتَبَ"
+future_type = "ضمة"
+
+# All conjugation options
+table = libqutrub.conjugator.conjugate(
+    verb,
+    future_type,
+    all=True,           # all tenses
+    past=True,         # past tense
+    future=True,       # future tense
+    passive=True,      # passive voice
+    imperative=True,   # imperative mood
+    future_moode=True, # subjunctive/jussive
+    confirmed=False,   # confirmed form
+    transitive=True,   # transitive verb
+    display_format="HTML"  # output format
+)
+```
+
+### Display Formats
+
+Available formats:
+- `'Text'`
+- `'HTML'`
+- `'HTMLColoredDiacritics'`
+- `'DICT'`
+- `'CSV'`
+- `'GUI'`
+- `'TABLE'`
+- `'XML'`
+- `'TeX'`
+- `'ROWS'`
+
+---
+
+## Web API
+
+For API documentation, see [doc/api.md](doc/api.md)
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Run specific test suite
+python -m pytest tests/test_conjugate.py
+```
+
+---
+
+## Project Structure
 
 ```
-* more options
-```python
-import libqutrub.conjugator
-
-verb=u"سعد"
-future_type =u"كسرة"
-all = True # all tenses
-past = True
-future=True
-passive =True
-imperative=True
-future_moode= True
-confirmed=False
-transitive =True
-display_format="HTML"
-table = libqutrub.conjugator.conjugate(verb,future_type,all,past,future,passive,imperative,future_moode,confirmed,transitive,display_format);
-print(table)
-
+├── libqutrub/           # Core conjugation library
+├── qutrub_notebook.ipynb # Development notebook
+├── tests/               # Test suite
+├── config/              # Configuration files
+├── interfaces/          # GUI and web interfaces
+├── data/               # Verb databases
+└── tools/              # Utility scripts
 ```
-### Web API
-view [API doc](doc/api.md)
+
+---
+
+## Contributing
+
+This is a development-focused fork. Contributions are welcome, especially:
+- 🧪 Improvements to the Jupyter notebook
+- 🔧 Library enhancements
+- 📝 Documentation improvements
+- 🐛 Bug fixes and optimizations
+
+---
+
+## License
+
+GPL License (see [COPYING](COPYING))
+
+---
+
+## Original Project
+
+Based on [Qutrub](https://github.com/linuxscout/qutrub) by Taha Zerrouki
+
+Developer: Taha Zerrouki
+Email: taha dot zerrouki at gmail dot com
+Website: [qutrub.arabeyes.org](http://qutrub.arabeyes.org)
