@@ -178,4 +178,127 @@ def create_comprehensive_forms_table(word, future_type="ضمة", transitive=Fals
     return display.display_comprehensive_forms_table(word, future_type)
 
 
+def get_comprehensive_forms_data(word, future_type="ضمة", transitive=False):
+    """
+    Get structured data for all 10 verb forms with complete conjugations
+    Returns a list of dictionaries, one for each form
+    
+    @param word: The base verb (root form - Form I)
+    @type word: unicode
+    @param future_type: Future type marking
+    @type future_type: unicode
+    @param transitive: Whether the verb is transitive
+    @type transitive: Boolean
+    @return: List of dictionaries with conjugation data for each form
+    @rtype: list
+    """
+    from . import verb_form_detector
+    from . import mosaref_main
+    import pyarabic.araby as araby
+    
+    form_definitions = [
+        (1, "I", "فَعَلَ", "REGULAR"),
+        (2, "II", "فَعَّلَ", "CAUSATIVE/INTENSIVE OR DENOMINATIVE"),
+        (3, "III", "فَاعَلَ", "RECIPROCAL"),
+        (4, "IV", "أَفْعَلَ", "CAUSATIVE"),
+        (5, "V", "تَفَعَّلَ", "REFLEXIVE OF II"),
+        (6, "VI", "تَفَاعَلَ", "REFLEXIVE OF III"),
+        (7, "VII", "اِنْفَعَلَ", "PASSIVE OF I"),
+        (8, "VIII", "اِفْتَعَلَ", "REFLEXIVE OF I"),
+        (9, "IX", "اِفْعَلَّ", "COLORS DEFECTS"),
+        (10, "X", "اِسْتَفْعَلَ", "CAUSATIVE REFLEXIVE")
+    ]
+    
+    # Get detector and generate actual verb forms
+    detector = verb_form_detector.get_detector()
+    current_form, _ = detector.detect_form_pattern(word)
+    
+    # Strip vocalization for root extraction
+    strip_fn = getattr(araby, "strip_harakat", None)
+    if strip_fn is None:
+        strip_fn = getattr(araby, "strip_tashkeel", None)
+    if strip_fn is None:
+        strip_fn = getattr(araby, "strip_diacritics", None)
+    if strip_fn is None:
+        def strip_fn(text):
+            return text
+    stripped_word = strip_fn(word)
+    
+    forms_data = []
+    
+    for form_num, roman, pattern, meaning in form_definitions:
+        # Get actual verb form for this form number
+        verb_form = None
+        if form_num == current_form:
+            verb_form = word
+        elif len(stripped_word) == 3:
+            variants = detector.generate_form_variants(word, form_num)
+            if variants:
+                verb_form = variants[0]
+        
+        form_data = {
+            "Form": str(form_num),
+            "Roman": roman,
+            "Pattern": pattern,
+            "Meaning": meaning
+        }
+        
+        if verb_form:
+            try:
+                # Conjugate the verb to get actual forms
+                result = mosaref_main.do_sarf(verb_form, future_type, alltense=True,
+                                               transitive=False, display_format="DICT")
+                
+                if result and hasattr(result, 'text') and hasattr(result, 'tab_conjug'):
+                    # Extract noun derivatives
+                    form_data["Noun_Place_Time"] = result.text.get("اسم المكان", "—")
+                    form_data["Passive_Participle"] = result.text.get("اسم المفعول", "—")
+                    form_data["Active_Participle"] = result.text.get("اسم الفاعل", "—")
+                    form_data["Masdar"] = result.text.get("المصدر", "—")
+                    
+                    # Get verb conjugations (3rd person masculine singular where applicable)
+                    form_data["Passive_Perfect"] = result.tab_conjug.get("ماضي مجهول", {}).get("هُوَ", "—")
+                    form_data["Passive_Imperfect"] = result.tab_conjug.get("مضارع مجهول", {}).get("هُوَ", "—")
+                    form_data["Imperative"] = result.tab_conjug.get("أمر", {}).get("أَنْتَ", "—")
+                    form_data["Active_Imperfect"] = result.tab_conjug.get("مضارع", {}).get("هُوَ", "—")
+                    form_data["Active_Perfect"] = result.tab_conjug.get("ماضي", {}).get("هُوَ", verb_form)
+                else:
+                    # Fallback if structure is different
+                    form_data["Noun_Place_Time"] = "—"
+                    form_data["Passive_Participle"] = "—"
+                    form_data["Active_Participle"] = "—"
+                    form_data["Masdar"] = "—"
+                    form_data["Passive_Perfect"] = "—"
+                    form_data["Passive_Imperfect"] = "—"
+                    form_data["Imperative"] = "—"
+                    form_data["Active_Imperfect"] = "—"
+                    form_data["Active_Perfect"] = verb_form
+            except Exception as e:
+                # Fallback on error
+                form_data["Noun_Place_Time"] = "—"
+                form_data["Passive_Participle"] = "—"
+                form_data["Active_Participle"] = "—"
+                form_data["Masdar"] = "—"
+                form_data["Passive_Perfect"] = "—"
+                form_data["Passive_Imperfect"] = "—"
+                form_data["Imperative"] = "—"
+                form_data["Active_Imperfect"] = "—"
+                form_data["Active_Perfect"] = verb_form if verb_form else pattern
+        else:
+            # No verb generated for this form
+            form_data["Noun_Place_Time"] = "—"
+            form_data["Passive_Participle"] = "—"
+            form_data["Active_Participle"] = "—"
+            form_data["Masdar"] = "—"
+            form_data["Passive_Perfect"] = "—"
+            form_data["Passive_Imperfect"] = "—"
+            form_data["Imperative"] = "—"
+            form_data["Active_Imperfect"] = "—"
+            form_data["Active_Perfect"] = "—"
+        
+        forms_data.append(form_data)
+    
+    return forms_data
+
+
 #~ conjugate = do_sarfco

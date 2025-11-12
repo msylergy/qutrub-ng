@@ -644,27 +644,100 @@ class ConjugateDisplay:
             (10, "X", "اِسْتَفْعَلَ", "CAUSATIVE REFLEXIVE")
         ]
         
+        # Import needed modules
+        from . import verb_form_detector
+        from . import mosaref_main
+        import pyarabic.araby as araby
+        
+        # Get detector and generate actual verb forms
+        detector = verb_form_detector.get_detector()
+        current_form, _ = detector.detect_form_pattern(root_verb)
+        
+        # Strip vocalization for root extraction
+        strip_fn = getattr(araby, "strip_harakat", None)
+        if strip_fn is None:
+            strip_fn = getattr(araby, "strip_tashkeel", None)
+        if strip_fn is None:
+            strip_fn = getattr(araby, "strip_diacritics", None)
+        if strip_fn is None:
+            def strip_fn(text):
+                return text
+        stripped_word = strip_fn(root_verb)
+        
         for form_num, roman, pattern, meaning in form_patterns:
-            # For each form, we need to generate the verb and extract all components
-            # This is simplified - in reality, you'd need to conjugate properly
+            # Get actual verb form for this form number
+            verb_form = None
+            if form_num == current_form:
+                verb_form = root_verb
+            elif len(stripped_word) == 3:
+                variants = detector.generate_form_variants(root_verb, form_num)
+                if variants:
+                    verb_form = variants[0]
             
-            # Placeholder values - these should be properly generated
-            noun_place_time = "مَفْعَل"
-            passive_participle = "مَفْعُول"
-            active_participle = "فَاعِل"
-            masdar = pattern  # Simplified
-            passive_perfect = "فُعِلَ"
-            passive_imperfect = "يُفْعَلُ"
-            imperative = "اِفْعَلْ"
-            active_imperfect = "يَفْعَلُ"
-            active_perfect = pattern
+            if verb_form:
+                try:
+                    # Conjugate the verb to get actual forms
+                    result = mosaref_main.do_sarf(verb_form, future_type, alltense=True,
+                                                   transitive=False, display_format="DICT")
+                    
+                    if result and hasattr(result, 'text') and hasattr(result, 'tab_conjug'):
+                        # Extract noun derivatives
+                        noun_place_time = result.text.get("اسم المكان", "—")
+                        passive_participle = result.text.get("اسم المفعول", "—")
+                        active_participle = result.text.get("اسم الفاعل", "—")
+                        masdar = result.text.get("المصدر", "—")
+                        
+                        # Get verb conjugations (3rd person masculine singular where applicable)
+                        passive_perfect = result.tab_conjug.get("ماضي مجهول", {}).get("هُوَ", "—")
+                        passive_imperfect = result.tab_conjug.get("مضارع مجهول", {}).get("هُوَ", "—")
+                        imperative = result.tab_conjug.get("أمر", {}).get("أَنْتَ", "—")
+                        active_imperfect = result.tab_conjug.get("مضارع", {}).get("هُوَ", "—")
+                        active_perfect = result.tab_conjug.get("ماضي", {}).get("هُوَ", verb_form)
+                    else:
+                        # Fallback if structure is different
+                        noun_place_time = "—"
+                        passive_participle = "—"
+                        active_participle = "—"
+                        masdar = "—"
+                        passive_perfect = "—"
+                        passive_imperfect = "—"
+                        imperative = "—"
+                        active_imperfect = "—"
+                        active_perfect = verb_form
+                except Exception as e:
+                    # Fallback on error
+                    noun_place_time = "—"
+                    passive_participle = "—"
+                    active_participle = "—"
+                    masdar = "—"
+                    passive_perfect = "—"
+                    passive_imperfect = "—"
+                    imperative = "—"
+                    active_imperfect = "—"
+                    active_perfect = verb_form if verb_form else pattern
+            else:
+                # No verb generated for this form
+                noun_place_time = "—"
+                passive_participle = "—"
+                active_participle = "—"
+                masdar = "—"
+                passive_perfect = "—"
+                passive_imperfect = "—"
+                imperative = "—"
+                active_imperfect = "—"
+                active_perfect = "—"
+            
+            # Truncate long values to fit in columns
+            def truncate(text, max_len):
+                text = str(text) if text else "—"
+                return text[:max_len] if len(text) > max_len else text
             
             # Format row with proper alignment
-            row = f"│  {roman:>2}  │ {noun_place_time:^8} │ {passive_participle:^8} │ {active_participle:^8} │ {masdar:^10} │ {passive_perfect:^9} │ {passive_imperfect:^9} │ {imperative:^8} │ {active_imperfect:^9} │ {active_perfect:^9} │ {meaning:^24} │"
+            row = f"│  {roman:>2}  │ {truncate(noun_place_time, 8):^8} │ {truncate(passive_participle, 8):^8} │ {truncate(active_participle, 8):^8} │ {truncate(masdar, 10):^10} │ {truncate(passive_perfect, 9):^9} │ {truncate(passive_imperfect, 9):^9} │ {truncate(imperative, 8):^8} │ {truncate(active_imperfect, 9):^9} │ {truncate(active_perfect, 9):^9} │ {meaning:^24} │"
             lines.append(row)
         
         lines.append("└──────┴──────────┴──────────┴──────────┴────────────┴───────────┴───────────┴──────────┴───────────┴───────────┴──────────────────────────┘")
         lines.append("")
-        lines.append("Note: This table shows the general patterns. Actual forms may vary based on the specific root.")
+        lines.append(f"Note: Conjugations generated for root verb '{root_verb}' across all 10 forms.")
         
         return "\n".join(lines)
