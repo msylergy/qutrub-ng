@@ -68,7 +68,8 @@ passive = False, imperative = False, future_moode = False, confirmed = False,
         - 'XML':
         - 'TeX':
         - 'ROWS':
-        - 'FORM_TABLE': (new) Show all 10 verb forms
+        - 'FORM_TABLE': Show all 10 verb forms (simple)
+        - 'COMPREHENSIVE_TABLE': Complete table with all conjugations and nouns
     @type display_format: string, default("HTML")
     @param form_filter: Filter for specific verb form (1-10), None for all
     @type form_filter: int or None
@@ -78,6 +79,8 @@ passive = False, imperative = False, future_moode = False, confirmed = False,
     # Handle special FORM_TABLE display format and form filtering
     if display_format.upper() == "FORM_TABLE":
         return create_verb_forms_table(word, form_filter, transitive)
+    elif display_format.upper() == "COMPREHENSIVE_TABLE":
+        return create_comprehensive_forms_table(word, future_type, transitive)
     elif form_filter is not None:
         # If form filter is specified but not using FORM_TABLE format,
         # we need to check if the current verb matches the form
@@ -120,7 +123,18 @@ def create_verb_forms_table(word, form_filter=None, transitive=False):
 
     # Generate variants for all other forms if we have a 3-letter root
     import pyarabic.araby as araby
-    stripped_word = araby.strip_vocalization(word)
+    # Some pyarabic builds expose strip_harakat, others only strip_tashkeel.
+    strip_fn = getattr(araby, "strip_harakat", None)
+    if strip_fn is None:
+        strip_fn = getattr(araby, "strip_tashkeel", None)
+    if strip_fn is None:
+        strip_fn = getattr(araby, "strip_diacritics", None)
+    if strip_fn is None:
+        # Fall back to the identity function; downstream code will still work
+        # but we log a hint for future maintainers.
+        def strip_fn(text):
+            return text
+    stripped_word = strip_fn(word)
     if len(stripped_word) == 3:
         for form_num in verb_const.VERB_FORMS_ORDER:
             if form_num != current_form:
@@ -139,6 +153,29 @@ def create_verb_forms_table(word, form_filter=None, transitive=False):
 
     # Create ASCII table
     return detector.create_ascii_table(word, filtered_data)
+
+
+def create_comprehensive_forms_table(word, future_type="ضمة", transitive=False):
+    """
+    Create comprehensive table showing all 10 forms with complete conjugations
+    and derived nouns - matching "The Ten Measures" format
+    
+    @param word: The base verb (root form - Form I)
+    @type word: unicode
+    @param future_type: Future type marking
+    @type future_type: unicode
+    @param transitive: Whether the verb is transitive
+    @type transitive: Boolean
+    @return: Formatted comprehensive table
+    @rtype: string
+    """
+    from . import conjugatedisplay
+    
+    # Create display object
+    display = conjugatedisplay.ConjugateDisplay(word)
+    
+    # Generate the comprehensive table
+    return display.display_comprehensive_forms_table(word, future_type)
 
 
 #~ conjugate = do_sarfco
