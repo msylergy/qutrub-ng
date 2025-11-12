@@ -36,6 +36,20 @@ from pyarabic.araby import FATHA, DAMMA, KASRA, SHADDA, SUKUN, HAMZA, ALEF, \
     YEH_HAMZA, WAW_HAMZA, TATWEEL, SMALL_ALEF, SMALL_YEH, SMALL_WAW, YEH, \
     ALEF_MAKSURA
 
+# Get the correct strip function from pyarabic (different versions use different names)
+_strip_vocalization = getattr(araby, "strip_harakat", None)
+if _strip_vocalization is None:
+    _strip_vocalization = getattr(araby, "strip_tashkeel", None)
+if _strip_vocalization is None:
+    _strip_vocalization = getattr(araby, "strip_diacritics", None)
+if _strip_vocalization is None:
+    # Fallback function if none of the above exist
+    def _strip_vocalization(text):
+        return text
+
+# Create alias for compatibility
+araby.strip_vocalization = _strip_vocalization
+
 class VerbFormInfo:
     """Class to store information about an Arabic verb form"""
 
